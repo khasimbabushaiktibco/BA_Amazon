@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns2="http://www.tibco.com/pe/EngineTypes" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns1="http://www.tibco.com/pe/DeployedVarsType" xmlns:ns="http://www.tibco.com/namespaces/tnt/plugins/jms" xmlns:tib="http://www.tibco.com/bw/xslt/custom-functions" xmlns:pfx3="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic" xmlns:pfx2="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic.xsd" xmlns:ns12="http://www.hcleai.com/leaf/exceptionclient" xmlns:pfx="http://www.urbanoutfitters.com/Amazon/PublishToAmazonTopic">
+    <xs:import xmlns:xs="http://www.w3.org/2001/XMLSchema" namespace="http://www.urbanoutfitters.com/Amazon/PublishToAmazonTopic" schemaLocation="/Shared Resources/Schemas/Common/Interfaces/Amazon/PublishToAmazonTopic.xsd"/>
+    <xs:import xmlns:xs="http://www.w3.org/2001/XMLSchema" namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic"/>
+    <pd:name>BusinessProcesses/StarterProcess/PublishToAmazonTopic.process</pd:name>
+    <pd:startName>JMS Queue Receiver</pd:startName>
+    <pd:startX>0</pd:startX>
+    <pd:startY>0</pd:startY>
+    <pd:returnBindings/>
+    <pd:starter name="JMS Queue Receiver">
+        <pd:type>com.tibco.plugin.jms.JMSQueueEventSource</pd:type>
+        <pd:resourceType>ae.activities.JMSQueueEventSource</pd:resourceType>
+        <pd:x>120</pd:x>
+        <pd:y>64</pd:y>
+        <config>
+            <PermittedMessageType>XML Text</PermittedMessageType>
+            <SessionAttributes>
+                <transacted>false</transacted>
+                <acknowledgeMode>2</acknowledgeMode>
+                <maxSessions>%%BusinessProcesses/SendToAmazonTopic/JMSMaxSession%%</maxSessions>
+                <destination>UO.TIBCO.AMAZON.PUBLISH.QUEUE</destination>
+            </SessionAttributes>
+            <ConfigurableHeaders>
+                <JMSDeliveryMode>PERSISTENT</JMSDeliveryMode>
+                <JMSExpiration>0</JMSExpiration>
+                <JMSPriority>4</JMSPriority>
+            </ConfigurableHeaders>
+            <ConnectionReference>/Shared Resources/Connections/JMS/EMS Connection.sharedjmscon</ConnectionReference>
+            <OutDataxsdString ref="pfx:Amazon"/>
+        </config>
+        <pd:inputBindings/>
+    </pd:starter>
+    <pd:endName>End</pd:endName>
+    <pd:endX>550</pd:endX>
+    <pd:endY>66</pd:endY>
+    <pd:errorSchemas/>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1434721633039</pd:targetNamespace>
+    <pd:activity name="PublishToAmazonTopicImpl">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>253</pd:x>
+        <pd:y>64</pd:y>
+        <config>
+            <processName>/BusinessProcesses/CallProcess/PublishToAmazonTopicImpl.process</processName>
+        </config>
+        <pd:inputBindings>
+            <xsl:for-each select="$JMS-Queue-Receiver/ns:ActivityOutput/Body/pfx:Amazon">
+                <pfx:Amazon>
+                    <pfx:TopicName>
+                        <xsl:value-of select="pfx:TopicName"/>
+                    </pfx:TopicName>
+                    <pfx:Payload>
+                        <xsl:value-of select="pfx:Payload"/>
+                    </pfx:Payload>
+                </pfx:Amazon>
+            </xsl:for-each>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>212</pd:x>
+        <pd:y>212</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="AddException">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>328</pd:x>
+        <pd:y>212</pd:y>
+        <config>
+            <processName>/LEAF Libraries/Exception/AddException.process</processName>
+        </config>
+        <pd:inputBindings>
+            <ns12:ExceptionCollection>
+                <xsl:choose>
+                    <xsl:when test="exists($_error_PublishToAmazonTopicImpl/ns12:ErrorReport)">
+                        <ns12:Exception>
+                            <ns12:ExceptionCode>
+                                <xsl:value-of select="$_error_PublishToAmazonTopicImpl/ns12:ErrorReport/ns12:MsgCode"/>
+                            </ns12:ExceptionCode>
+                            <ns12:ProcessName>
+                                <xsl:value-of select="'Publish to Amazon Topic'"/>
+                            </ns12:ProcessName>
+                            <ns12:Domain>
+                                <xsl:value-of select="$_globalVariables/ns1:GlobalVariables/LEAF/DomainName"/>
+                            </ns12:Domain>
+                            <ns12:ExceptionLoggedDateTime>
+                                <xsl:value-of select="current-dateTime()"/>
+                            </ns12:ExceptionLoggedDateTime>
+                            <ns12:ExceptionDetails>
+                                <xsl:value-of select="$_error_PublishToAmazonTopicImpl/ns12:ErrorReport/ns12:Msg"/>
+                            </ns12:ExceptionDetails>
+                            <ns12:DeferNotification>
+                                <xsl:value-of select="'Y'"/>
+                            </ns12:DeferNotification>
+                            <ns12:DeferNotificationTimeoutInSecs>
+                                <xsl:value-of select="0"/>
+                            </ns12:DeferNotificationTimeoutInSecs>
+                            <xsl:for-each xmlns:xsl="http://www.w3.org/1999/XSL/Transform" select="$_error_PublishToAmazonTopicImpl/ns12:ErrorReport">
+                                <ns12:ErrorReport>
+                                    <ns12:StackTrace>
+                                        <xsl:value-of select="ns12:StackTrace"/>
+                                    </ns12:StackTrace>
+                                    <ns12:Msg>
+                                        <xsl:value-of select="ns12:Msg"/>
+                                    </ns12:Msg>
+                                    <ns12:FullClass>
+                                        <xsl:value-of select="ns12:FullClass"/>
+                                    </ns12:FullClass>
+                                    <ns12:Class>
+                                        <xsl:value-of select="ns12:Class"/>
+                                    </ns12:Class>
+                                    <ns12:ProcessStack>
+                                        <xsl:value-of select="ns12:ProcessStack"/>
+                                    </ns12:ProcessStack>
+                                    <ns12:MsgCode>
+                                        <xsl:value-of select="ns12:MsgCode"/>
+                                    </ns12:MsgCode>
+                                    <xsl:if test="ns12:Data">
+                                        <ns12:Data>
+                                            <xsl:value-of select="ns12:Data"/>
+                                        </ns12:Data>
+                                    </xsl:if>
+                                </ns12:ErrorReport>
+                            </xsl:for-each>
+                            <xsl:for-each xmlns:xsl="http://www.w3.org/1999/XSL/Transform" select="$_processContext/ns2:ProcessContext">
+                                <ns12:ProcessContext>
+                                    <ns12:ProcessId>
+                                        <xsl:value-of select="ProcessId"/>
+                                    </ns12:ProcessId>
+                                    <ns12:ProjectName>
+                                        <xsl:value-of select="ProjectName"/>
+                                    </ns12:ProjectName>
+                                    <ns12:EngineName>
+                                        <xsl:value-of select="EngineName"/>
+                                    </ns12:EngineName>
+                                    <ns12:RestartedFromCheckpoint>
+                                        <xsl:value-of select="RestartedFromCheckpoint"/>
+                                    </ns12:RestartedFromCheckpoint>
+                                    <xsl:for-each select="TrackingInfo">
+                                        <ns12:TrackingInfo>
+                                            <xsl:value-of select="."/>
+                                        </ns12:TrackingInfo>
+                                    </xsl:for-each>
+                                    <xsl:if test="CustomId">
+                                        <ns12:CustomId>
+                                            <xsl:value-of select="CustomId"/>
+                                        </ns12:CustomId>
+                                    </xsl:if>
+                                </ns12:ProcessContext>
+                            </xsl:for-each>
+                            <ns12:ExceptionParameters>
+                                <ns12:Name>
+                                    <xsl:value-of select="'ProcessId'"/>
+                                </ns12:Name>
+                                <ns12:Value>
+                                    <xsl:value-of select="$_processContext/ns2:ProcessContext/ProcessId"/>
+                                </ns12:Value>
+                            </ns12:ExceptionParameters>
+                            <ns12:ExceptionAttachments>
+                                <ns12:Name>
+                                    <xsl:value-of select="'PublishToAmazonTopicRequestMsg'"/>
+                                </ns12:Name>
+                                <ns12:Type>
+                                    <xsl:value-of select="'XML'"/>
+                                </ns12:Type>
+                                <ns12:Data>
+                                    <xsl:value-of select="tib:render-xml($JMS-Queue-Receiver/ns:ActivityOutput/Body/pfx:Amazon/pfx:Payload)"/>
+                                </ns12:Data>
+                            </ns12:ExceptionAttachments>
+                        </ns12:Exception>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <ns12:Exception>
+                            <ns12:ExceptionCode>
+                                <xsl:value-of select="&quot;AMAZON_Datavalidation&quot;"/>
+                            </ns12:ExceptionCode>
+                            <ns12:ProcessName>
+                                <xsl:value-of select="'PublishToAmazonTopic'"/>
+                            </ns12:ProcessName>
+                            <ns12:Domain>
+                                <xsl:value-of select="$_globalVariables/ns1:GlobalVariables/LEAF/DomainName"/>
+                            </ns12:Domain>
+                            <ns12:ExceptionLoggedDateTime>
+                                <xsl:value-of select="current-dateTime()"/>
+                            </ns12:ExceptionLoggedDateTime>
+                            <ns12:ExceptionDetails>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/Msg"/>
+                            </ns12:ExceptionDetails>
+                            <ns12:DeferNotification>
+                                <xsl:value-of select="'Y'"/>
+                            </ns12:DeferNotification>
+                            <ns12:DeferNotificationTimeoutInSecs>
+                                <xsl:value-of select="0"/>
+                            </ns12:DeferNotificationTimeoutInSecs>
+                            <xsl:for-each xmlns:xsl="http://www.w3.org/1999/XSL/Transform" select="$_error/ns2:ErrorReport">
+                                <ns12:ErrorReport>
+                                    <ns12:StackTrace>
+                                        <xsl:value-of select="StackTrace"/>
+                                    </ns12:StackTrace>
+                                    <ns12:Msg>
+                                        <xsl:value-of select="Msg"/>
+                                    </ns12:Msg>
+                                    <ns12:FullClass>
+                                        <xsl:value-of select="FullClass"/>
+                                    </ns12:FullClass>
+                                    <ns12:Class>
+                                        <xsl:value-of select="Class"/>
+                                    </ns12:Class>
+                                    <ns12:ProcessStack>
+                                        <xsl:value-of select="ProcessStack"/>
+                                    </ns12:ProcessStack>
+                                    <ns12:MsgCode>
+                                        <xsl:value-of select="MsgCode"/>
+                                    </ns12:MsgCode>
+                                    <ns12:Data>
+                                        <xsl:value-of select="tib:render-xml(Data/*)"/>
+                                    </ns12:Data>
+                                </ns12:ErrorReport>
+                            </xsl:for-each>
+                            <xsl:for-each xmlns:xsl="http://www.w3.org/1999/XSL/Transform" select="$_processContext/ns2:ProcessContext">
+                                <ns12:ProcessContext>
+                                    <ns12:ProcessId>
+                                        <xsl:value-of select="ProcessId"/>
+                                    </ns12:ProcessId>
+                                    <ns12:ProjectName>
+                                        <xsl:value-of select="ProjectName"/>
+                                    </ns12:ProjectName>
+                                    <ns12:EngineName>
+                                        <xsl:value-of select="EngineName"/>
+                                    </ns12:EngineName>
+                                    <ns12:RestartedFromCheckpoint>
+                                        <xsl:value-of select="RestartedFromCheckpoint"/>
+                                    </ns12:RestartedFromCheckpoint>
+                                    <xsl:for-each select="TrackingInfo">
+                                        <ns12:TrackingInfo>
+                                            <xsl:value-of select="."/>
+                                        </ns12:TrackingInfo>
+                                    </xsl:for-each>
+                                    <xsl:if test="CustomId">
+                                        <ns12:CustomId>
+                                            <xsl:value-of select="CustomId"/>
+                                        </ns12:CustomId>
+                                    </xsl:if>
+                                </ns12:ProcessContext>
+                            </xsl:for-each>
+                            <ns12:ExceptionParameters>
+                                <ns12:Name>
+                                    <xsl:value-of select="'ProcessId'"/>
+                                </ns12:Name>
+                                <ns12:Value>
+                                    <xsl:value-of select="$_processContext/ns2:ProcessContext/ProcessId"/>
+                                </ns12:Value>
+                            </ns12:ExceptionParameters>
+                            <ns12:ExceptionAttachments>
+                                <ns12:Name>
+                                    <xsl:value-of select="'PublishToAmazonTopicRequestMsg'"/>
+                                </ns12:Name>
+                                <ns12:Type>
+                                    <xsl:value-of select="'XML'"/>
+                                </ns12:Type>
+                                <ns12:Data>
+                                    <xsl:value-of select="tib:render-xml($JMS-Queue-Receiver/ns:ActivityOutput/Body/pfx:Amazon/pfx:Payload)"/>
+                                </ns12:Data>
+                            </ns12:ExceptionAttachments>
+                        </ns12:Exception>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </ns12:ExceptionCollection>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Confirm">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>411</pd:x>
+        <pd:y>68</pd:y>
+        <config>
+            <ConfirmEvent>JMS Queue Receiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="ConfirmOnError">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>528</pd:x>
+        <pd:y>206</pd:y>
+        <config>
+            <ConfirmEvent>JMS Queue Receiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>JMS Queue Receiver</pd:from>
+        <pd:to>PublishToAmazonTopicImpl</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>PublishToAmazonTopicImpl</pd:from>
+        <pd:to>Confirm</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>AddException</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AddException</pd:from>
+        <pd:to>ConfirmOnError</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Confirm</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ConfirmOnError</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

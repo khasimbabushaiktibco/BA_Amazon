@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns="http://www.tibco.com/pe/DeployedVarsType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tib="http://www.tibco.com/bw/xslt/custom-functions" xmlns:pfx3="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon" xmlns:pfx2="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon" xmlns:pfx="http://www.hcleai.com/leaf/exceptionclient">
+    <xsd:import namespace="http://www.hcleai.com/leaf/exceptionclient" schemaLocation="/Shared Resources/Schemas/Custom/Exception/ExceptionSchema.xsd"/>
+    <xsd:import namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon" schemaLocation="/Shared Resources/Schemas/PublishtoAmazon.xsd"/>
+    <xsd:import namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon" schemaLocation="/Shared Resources/Schemas/ReceiveFromAmazon.xsd"/>
+    <pd:name>BusinessProcesses/CallProcess/AmazonBridgeImpl.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startX>31</pd:startX>
+    <pd:startY>172</pd:startY>
+    <pd:returnBindings/>
+    <pd:endName>End</pd:endName>
+    <pd:endX>711</pd:endX>
+    <pd:endY>178</pd:endY>
+    <pd:errorSchemas>
+        <ErrorSchema ref="pfx:ErrorReport"/>
+    </pd:errorSchemas>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1425451433593</pd:targetNamespace>
+    <pd:group name="Group">
+        <pd:type>com.tibco.pe.core.LoopGroup</pd:type>
+        <pd:resourceType>ae.process.group</pd:resourceType>
+        <pd:x>226</pd:x>
+        <pd:y>37</pd:y>
+        <pd:width>426</pd:width>
+        <pd:height>272</pd:height>
+        <pd:collapsedWidth>57</pd:collapsedWidth>
+        <pd:collapsedHeight>70</pd:collapsedHeight>
+        <pd:groupVariables/>
+        <pd:joinToggle>inherit</pd:joinToggle>
+        <config>
+            <pd:groupType>inputLoop</pd:groupType>
+            <pd:serializable>false</pd:serializable>
+            <pd:over>tib:tokenize($_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/AmazonQueues,',')</pd:over>
+            <pd:iterationElementSlot>current</pd:iterationElementSlot>
+            <pd:indexSlot>j</pd:indexSlot>
+            <pd:activityOutputName/>
+            <pd:accumulateOutput>false</pd:accumulateOutput>
+        </config>
+        <pd:inputBindings/>
+        <pd:expanded>true</pd:expanded>
+        <pd:transition>
+            <pd:from>start</pd:from>
+            <pd:to>Seperate Queues</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:transition>
+            <pd:from>CallAmazonBridgeSub</pd:from>
+            <pd:to>end</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:transition>
+            <pd:from>Seperate Queues</pd:from>
+            <pd:to>CallAmazonBridgeSub</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:activity name="Seperate Queues">
+            <pd:type>com.tibco.plugin.mapper.MapperActivity</pd:type>
+            <pd:resourceType>ae.activities.MapperActivity</pd:resourceType>
+            <pd:x>341</pd:x>
+            <pd:y>180</pd:y>
+            <config>
+                <element ref="pfx3:root"/>
+            </config>
+            <pd:inputBindings>
+                <xsl:variable name="TibcoQueues" select="tib:tokenize($_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/TIBCOqueues,',')"/>
+                <xsl:variable name="AmazonQueues" select="tib:tokenize($_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/AmazonQueues,',')"/>
+                <pfx3:root>
+                    <pfx3:Queues>
+                        <pfx3:AmazonQueue>
+                            <xsl:value-of select="$AmazonQueues[$j]"/>
+                        </pfx3:AmazonQueue>
+                        <pfx3:TIBCOQueue>
+                            <xsl:value-of select="$TibcoQueues[$j]"/>
+                        </pfx3:TIBCOQueue>
+                    </pfx3:Queues>
+                </pfx3:root>
+            </pd:inputBindings>
+        </pd:activity>
+        <pd:activity name="CallAmazonBridgeSub">
+            <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+            <pd:resourceType>ae.process.subprocess</pd:resourceType>
+            <pd:x>494</pd:x>
+            <pd:y>174</pd:y>
+            <config>
+                <processName>/BusinessProcesses/SubProcess/AmazonBridgeSub.process</processName>
+                <spawn>true</spawn>
+            </config>
+            <pd:inputBindings>
+                <xsl:for-each select="$Seperate-Queues/pfx3:root">
+                    <pfx3:root>
+                        <xsl:for-each select="pfx3:Queues">
+                            <pfx3:Queues>
+                                <pfx3:AmazonQueue>
+                                    <xsl:value-of select="pfx3:AmazonQueue"/>
+                                </pfx3:AmazonQueue>
+                                <pfx3:TIBCOQueue>
+                                    <xsl:value-of select="pfx3:TIBCOQueue"/>
+                                </pfx3:TIBCOQueue>
+                            </pfx3:Queues>
+                        </xsl:for-each>
+                    </pfx3:root>
+                </xsl:for-each>
+            </pd:inputBindings>
+        </pd:activity>
+    </pd:group>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>255</pd:x>
+        <pd:y>392</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Rethrow">
+        <pd:type>com.tibco.pe.core.RethrowActivity</pd:type>
+        <pd:resourceType>ae.activities.rethrow</pd:resourceType>
+        <pd:x>420</pd:x>
+        <pd:y>400</pd:y>
+        <config/>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Group</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>Group</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>Rethrow</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

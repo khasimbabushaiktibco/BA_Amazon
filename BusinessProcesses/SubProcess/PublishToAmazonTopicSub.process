@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:ns2="http://schemas.tibco.com/bw/plugins/java/5.0/javaExceptions" xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns1="http://www.tibco.com/pe/EngineTypes" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns="http://www.tibco.com/pe/GenerateErrorActivity/InputSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:pfx="http://www.hcleai.com/leaf/exceptionclient">
+    <xsd:import namespace="http://www.hcleai.com/leaf/exceptionclient" schemaLocation="/Shared Resources/Schemas/Custom/Exception/ExceptionSchema.xsd"/>
+    <pd:name>BusinessProcesses/SubProcess/PublishToAmazonTopicSub.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startType>
+        <xsd:element name="Request">
+            <xsd:complexType>
+                <xsd:sequence>
+                    <xsd:element name="AmazonTopicName" type="xsd:string"/>
+                    <xsd:element name="Payload" type="xsd:string"/>
+                    <xsd:element name="accessKey" type="xsd:string"/>
+                    <xsd:element name="secretKey" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+        </xsd:element>
+    </pd:startType>
+    <pd:startX>144</pd:startX>
+    <pd:startY>84</pd:startY>
+    <pd:returnBindings>
+        <root>
+            <MessageID>
+                <xsl:value-of select="$ToAmazonTopic/javaCodeActivityOutput/messageId"/>
+            </MessageID>
+        </root>
+    </pd:returnBindings>
+    <pd:endName>End</pd:endName>
+    <pd:endType>
+        <xsd:element name="root">
+            <xsd:complexType>
+                <xsd:sequence>
+                    <xsd:element name="MessageID" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+        </xsd:element>
+    </pd:endType>
+    <pd:endX>463</pd:endX>
+    <pd:endY>85</pd:endY>
+    <pd:errorSchemas>
+        <ErrorSchema ref="pfx:ErrorReport"/>
+    </pd:errorSchemas>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1432883503842</pd:targetNamespace>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>219</pd:x>
+        <pd:y>216</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Generate Error">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>391</pd:x>
+        <pd:y>216</pd:y>
+        <config>
+            <faultName>ErrorSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <ns:ActivityInput>
+                <data>
+                    <xsl:for-each select="$_error/ns1:ErrorReport">
+                        <pfx:ErrorReport>
+                            <pfx:StackTrace>
+                                <xsl:value-of select="StackTrace"/>
+                            </pfx:StackTrace>
+                            <pfx:Msg>
+                                <xsl:value-of select="if(exists($_error_ToAmazonTopic/ns2:InvocationException))&#xA;then&#xA;concat(&quot;Exception occured while Publishing message to Amazon Topic&quot;,$_error_ToAmazonTopic/ns2:InvocationException)&#xA;else&#xA;Msg"/>
+                            </pfx:Msg>
+                            <pfx:FullClass>
+                                <xsl:value-of select="FullClass"/>
+                            </pfx:FullClass>
+                            <pfx:Class>
+                                <xsl:value-of select="Class"/>
+                            </pfx:Class>
+                            <pfx:ProcessStack>
+                                <xsl:value-of select="ProcessStack"/>
+                            </pfx:ProcessStack>
+                            <pfx:MsgCode>
+                                <xsl:value-of select="if(exists($_error_ToAmazonTopic/ns2:InvocationException/msgCode))&#xA;then&#xA;&quot;Amazon_SYS_Exception&quot;&#xA;else&#xA;&quot;Amazon_DataValidation&quot;"/>
+                            </pfx:MsgCode>
+                            <xsl:if test="Data/*">
+                                <pfx:Data>
+                                    <xsl:value-of select="Data/*"/>
+                                </pfx:Data>
+                            </xsl:if>
+                        </pfx:ErrorReport>
+                    </xsl:for-each>
+                </data>
+            </ns:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="ToAmazonTopic">
+        <pd:type>com.tibco.plugin.java.JavaActivity</pd:type>
+        <pd:resourceType>ae.javapalette.javaActivity</pd:resourceType>
+        <pd:x>304</pd:x>
+        <pd:y>84</pd:y>
+        <config>
+            <fileName>PublishToAmazonTopicSubToAmazonTopic</fileName>
+            <packageName>BusinessProcesses.SubProcess.PublishToAmazonTopicSub</packageName>
+            <fullsource>package BusinessProcesses.SubProcess.PublishToAmazonTopicSub;
+import java.util.*;
+import java.io.*;
+
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
+
+public class PublishToAmazonTopicSubToAmazonTopic{
+/****** START SET/GET METHOD, DO NOT MODIFY *****/
+	protected String accessKey = "";
+	protected String secretKey = "";
+	protected String topicName = "";
+	protected String msgToSend = "";
+	protected String messageId = "";
+	public String getaccessKey() {
+		return accessKey;
+	}
+	public void setaccessKey(String val) {
+		accessKey = val;
+	}
+	public String getsecretKey() {
+		return secretKey;
+	}
+	public void setsecretKey(String val) {
+		secretKey = val;
+	}
+	public String gettopicName() {
+		return topicName;
+	}
+	public void settopicName(String val) {
+		topicName = val;
+	}
+	public String getmsgToSend() {
+		return msgToSend;
+	}
+	public void setmsgToSend(String val) {
+		msgToSend = val;
+	}
+	public String getmessageId() {
+		return messageId;
+	}
+	public void setmessageId(String val) {
+		messageId = val;
+	}
+/****** END SET/GET METHOD, DO NOT MODIFY *****/
+	public PublishToAmazonTopicSubToAmazonTopic() {
+	}
+	public void invoke() throws Exception {
+/* Available Variables: DO NOT MODIFY
+	In  : String accessKey
+	In  : String secretKey
+	In  : String topicName
+	In  : String msgToSend
+	Out : String messageId
+* Available Variables: DO NOT MODIFY *****/
+		//To get connection with Amazon web service		
+		AWSCredentials credentials = new  BasicAWSCredentials(getaccessKey(), getsecretKey());  
+        //Sending message on to Amazon topic
+      	AmazonSNSClient snsClient = new AmazonSNSClient(credentials);		                           
+    	snsClient.setRegion(Region.getRegion(Regions.US_EAST_1));  	
+    	  PublishRequest publishRequest = new PublishRequest(gettopicName(),getmsgToSend());
+    	PublishResult publishResult = snsClient.publish(publishRequest);    	
+    	//outPut ---&gt; this gives Message ID as out example :"MessageId - f01b218f-11bc-5bb0-9eea-6c6e0b192497"
+    	setmessageId(publishResult.getMessageId());
+	}
+
+}
+
+</fullsource>
+            <javaArchive/>
+            <inputData>
+                <row>
+                    <fieldName>accessKey</fieldName>
+                    <fieldType>string</fieldType>
+                    <fieldRequired>optional</fieldRequired>
+                </row>
+                <row>
+                    <fieldName>secretKey</fieldName>
+                    <fieldType>string</fieldType>
+                    <fieldRequired>optional</fieldRequired>
+                </row>
+                <row>
+                    <fieldName>topicName</fieldName>
+                    <fieldType>string</fieldType>
+                    <fieldRequired>optional</fieldRequired>
+                </row>
+                <row>
+                    <fieldName>msgToSend</fieldName>
+                    <fieldType>string</fieldType>
+                    <fieldRequired>optional</fieldRequired>
+                </row>
+            </inputData>
+            <outputData>
+                <row>
+                    <fieldName>messageId</fieldName>
+                    <fieldType>string</fieldType>
+                    <fieldRequired>optional</fieldRequired>
+                </row>
+            </outputData>
+            <byteCode>
+                <class>
+                    <name>PublishToAmazonTopicSubToAmazonTopic</name>
+                    <byteCode>yv66vgAAADMAXwkAGAA1CQAYADYJABgANwkAGAA4CQAYADkKABkAOggAOwcAPAoAGAA9CgAYAD4KAAgAPwcAQAoADABBCQBCAEMKAEQARQoADABGBwBHCgAYAEgKABgASQoAEQA/CgAMAEoKAEsATAoAGABNBwBOBwBPAQAJYWNjZXNzS2V5AQASTGphdmEvbGFuZy9TdHJpbmc7AQAJc2VjcmV0S2V5AQAJdG9waWNOYW1lAQAJbXNnVG9TZW5kAQAJbWVzc2FnZUlkAQAMZ2V0YWNjZXNzS2V5AQAUKClMamF2YS9sYW5nL1N0cmluZzsBAARDb2RlAQAPTGluZU51bWJlclRhYmxlAQAMc2V0YWNjZXNzS2V5AQAVKExqYXZhL2xhbmcvU3RyaW5nOylWAQAMZ2V0c2VjcmV0S2V5AQAMc2V0c2VjcmV0S2V5AQAMZ2V0dG9waWNOYW1lAQAMc2V0dG9waWNOYW1lAQAMZ2V0bXNnVG9TZW5kAQAMc2V0bXNnVG9TZW5kAQAMZ2V0bWVzc2FnZUlkAQAMc2V0bWVzc2FnZUlkAQAGPGluaXQ+AQADKClWAQAGaW52b2tlAQAKRXhjZXB0aW9ucwcAUAEAClNvdXJjZUZpbGUBAClQdWJsaXNoVG9BbWF6b25Ub3BpY1N1YlRvQW1hem9uVG9waWMuamF2YQwAGgAbDAAcABsMAB0AGwwAHgAbDAAfABsMAC4ALwEAAAEAJmNvbS9hbWF6b25hd3MvYXV0aC9CYXNpY0FXU0NyZWRlbnRpYWxzDAAgACEMACYAIQwALgBRAQAqY29tL2FtYXpvbmF3cy9zZXJ2aWNlcy9zbnMvQW1hem9uU05TQ2xpZW50DAAuAFIHAFMMAFQAVQcAVgwAVwBYDABZAFoBAC9jb20vYW1hem9uYXdzL3NlcnZpY2VzL3Nucy9tb2RlbC9QdWJsaXNoUmVxdWVzdAwAKAAhDAAqACEMAFsAXAcAXQwAXgAhDAAtACUBAFlCdXNpbmVzc1Byb2Nlc3Nlcy9TdWJQcm9jZXNzL1B1Ymxpc2hUb0FtYXpvblRvcGljU3ViL1B1Ymxpc2hUb0FtYXpvblRvcGljU3ViVG9BbWF6b25Ub3BpYwEAEGphdmEvbGFuZy9PYmplY3QBABNqYXZhL2xhbmcvRXhjZXB0aW9uAQAnKExqYXZhL2xhbmcvU3RyaW5nO0xqYXZhL2xhbmcvU3RyaW5nOylWAQAmKExjb20vYW1hem9uYXdzL2F1dGgvQVdTQ3JlZGVudGlhbHM7KVYBAB1jb20vYW1hem9uYXdzL3JlZ2lvbnMvUmVnaW9ucwEACVVTX0VBU1RfMQEAH0xjb20vYW1hem9uYXdzL3JlZ2lvbnMvUmVnaW9uczsBABxjb20vYW1hem9uYXdzL3JlZ2lvbnMvUmVnaW9uAQAJZ2V0UmVnaW9uAQA/KExjb20vYW1hem9uYXdzL3JlZ2lvbnMvUmVnaW9uczspTGNvbS9hbWF6b25hd3MvcmVnaW9ucy9SZWdpb247AQAJc2V0UmVnaW9uAQAhKExjb20vYW1hem9uYXdzL3JlZ2lvbnMvUmVnaW9uOylWAQAHcHVibGlzaAEAYyhMY29tL2FtYXpvbmF3cy9zZXJ2aWNlcy9zbnMvbW9kZWwvUHVibGlzaFJlcXVlc3Q7KUxjb20vYW1hem9uYXdzL3NlcnZpY2VzL3Nucy9tb2RlbC9QdWJsaXNoUmVzdWx0OwEALmNvbS9hbWF6b25hd3Mvc2VydmljZXMvc25zL21vZGVsL1B1Ymxpc2hSZXN1bHQBAAxnZXRNZXNzYWdlSWQAIQAYABkAAAAFAAQAGgAbAAAABAAcABsAAAAEAB0AGwAAAAQAHgAbAAAABAAfABsAAAAMAAEAIAAhAAEAIgAAAB0AAQABAAAABSq0AAGwAAAAAQAjAAAABgABAAAAFQABACQAJQABACIAAAAiAAIAAgAAAAYqK7UAAbEAAAABACMAAAAKAAIAAAAYAAUAGQABACYAIQABACIAAAAdAAEAAQAAAAUqtAACsAAAAAEAIwAAAAYAAQAAABsAAQAnACUAAQAiAAAAIgACAAIAAAAGKiu1AAKxAAAAAQAjAAAACgACAAAAHgAFAB8AAQAoACEAAQAiAAAAHQABAAEAAAAFKrQAA7AAAAABACMAAAAGAAEAAAAhAAEAKQAlAAEAIgAAACIAAgACAAAABiortQADsQAAAAEAIwAAAAoAAgAAACQABQAlAAEAKgAhAAEAIgAAAB0AAQABAAAABSq0AASwAAAAAQAjAAAABgABAAAAJwABACsAJQABACIAAAAiAAIAAgAAAAYqK7UABLEAAAABACMAAAAKAAIAAAAqAAUAKwABACwAIQABACIAAAAdAAEAAQAAAAUqtAAFsAAAAAEAIwAAAAYAAQAAAC0AAQAtACUAAQAiAAAAIgACAAIAAAAGKiu1AAWxAAAAAQAjAAAACgACAAAAMAAFADEAAQAuAC8AAQAiAAAAUwACAAEAAAAjKrcABioSB7UAASoSB7UAAioSB7UAAyoSB7UABCoSB7UABbEAAAABACMAAAAeAAcAAAAzAAQADwAKABAAEAARABYAEgAcABMAIgA0AAEAMAAvAAIAIgAAAHQABAAFAAAARLsACFkqtgAJKrYACrcAC0y7AAxZK7cADU0ssgAOuAAPtgAQuwARWSq2ABIqtgATtwAUTiwttgAVOgQqGQS2ABa2ABexAAAAAQAjAAAAHgAHAAAAPgAQAEAAGQBBACMAQgAzAEMAOgBFAEMARgAxAAAABAABADIAAQAzAAAAAgA0</byteCode>
+                </class>
+            </byteCode>
+        </config>
+        <pd:inputBindings>
+            <javaCodeActivityInput>
+                <accessKey>
+                    <xsl:value-of select="$Start/Request/accessKey"/>
+                </accessKey>
+                <secretKey>
+                    <xsl:value-of select="$Start/Request/secretKey"/>
+                </secretKey>
+                <topicName>
+                    <xsl:value-of select="$Start/Request/AmazonTopicName"/>
+                </topicName>
+                <msgToSend>
+                    <xsl:value-of select="$Start/Request/Payload"/>
+                </msgToSend>
+            </javaCodeActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>ToAmazonTopic</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>Generate Error</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>ToAmazonTopic</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

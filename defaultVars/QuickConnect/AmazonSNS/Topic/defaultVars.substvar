@@ -1,0 +1,21 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<repository xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns = "http://www.tibco.com/xmlns/repo/types/2002">
+	<globalVariables>
+		<globalVariable>
+			<name>AccessKey</name>
+			<value>AKIAJSMXJK5VP4JBGGLA</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>String</type>
+			<modTime>1445945317762</modTime>
+		</globalVariable>
+		<globalVariable>
+			<name>SecretKey</name>
+			<value>aJ4xHK+fpguMvfiMhEcA1bKjBtofkrDXvaktxYo+</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>String</type>
+			<modTime>1445945317798</modTime>
+		</globalVariable>
+	</globalVariables>
+</repository>

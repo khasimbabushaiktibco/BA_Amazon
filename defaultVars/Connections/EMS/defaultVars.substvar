@@ -1,0 +1,37 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<repository xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns = "http://www.tibco.com/xmlns/repo/types/2002">
+	<globalVariables>
+		<globalVariable>
+			<name>ConnectionURL</name>
+			<value>tcp://tib-dev1:7222</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>String</type>
+			<modTime>1431539338483</modTime>
+		</globalVariable>
+		<globalVariable>
+			<name>JNDIPassword</name>
+			<value>#!lPbY8xsg9ujpBPS6yKyx+f8YB0KfWxMY</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>Password</type>
+			<modTime>1425460337679</modTime>
+		</globalVariable>
+		<globalVariable>
+			<name>JNDIUserName</name>
+			<value>admin</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>String</type>
+			<modTime>1425460322854</modTime>
+		</globalVariable>
+		<globalVariable>
+			<name>MaxSessions</name>
+			<value>1</value>
+			<deploymentSettable>true</deploymentSettable>
+			<serviceSettable>false</serviceSettable>
+			<type>String</type>
+			<modTime>1429008229257</modTime>
+		</globalVariable>
+	</globalVariables>
+</repository>

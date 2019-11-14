@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Repository:repository xmlns:Repository="http://www.tibco.com/xmlns/repo/types/2002">
+    <enterpriseArchive>
+        <sharedArchive name="BW_Amazon_SA">
+            <resourceType>shared.archive.resource</resourceType>
+            <authorProperty>MJallipalli</authorProperty>
+            <sharedResources/>
+            <sharedFiles/>
+            <sharedJarFiles/>
+        </sharedArchive>
+        <processArchive name="BW_Amazon_PA">
+            <resourceType>process.archive.resource</resourceType>
+            <authorProperty>MJallipalli</authorProperty>
+            <processProperty>/BusinessProcesses/StarterProcess/AmazonBridgeTimerProcess.process,/BusinessProcesses/StarterProcess/SendtoAmazonQueueProcess.process,/BusinessProcesses/StarterProcess/PublishToAmazonTopic.process</processProperty>
+        </processArchive>
+        <versionProperty>36</versionProperty>
+        <authorProperty>MJallipalli</authorProperty>
+        <addServiceSettableGvars>true</addServiceSettableGvars>
+        <name>BW_Amazon</name>
+        <designer>
+            <lockedProperties/>
+            <fixedChildren/>
+            <resourceDescriptions/>
+        </designer>
+        <fileLocationProperty>\BW_Amazon\Deployment\BW_Amazon.ear</fileLocationProperty>
+    </enterpriseArchive>
+</Repository:repository>

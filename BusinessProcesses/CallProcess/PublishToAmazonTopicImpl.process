@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns="http://www.tibco.com/pe/DeployedVarsType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:pfx4="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic" xmlns:pfx3="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic.xsd" xmlns:pfx2="http://www.hcleai.com/leaf/exceptionclient" xmlns:pfx="http://www.urbanoutfitters.com/Amazon/PublishToAmazonTopic">
+    <xsd:import namespace="http://www.hcleai.com/leaf/exceptionclient" schemaLocation="/Shared Resources/Schemas/Custom/Exception/ExceptionSchema.xsd"/>
+    <xsd:import namespace="http://www.urbanoutfitters.com/Amazon/PublishToAmazonTopic" schemaLocation="/Shared Resources/Schemas/Common/Interfaces/Amazon/PublishToAmazonTopic.xsd"/>
+    <xsd:import namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazonTopic"/>
+    <pd:name>BusinessProcesses/CallProcess/PublishToAmazonTopicImpl.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startType ref="pfx:Amazon"/>
+    <pd:startX>148</pd:startX>
+    <pd:startY>56</pd:startY>
+    <pd:returnBindings/>
+    <pd:endName>End</pd:endName>
+    <pd:endX>451</pd:endX>
+    <pd:endY>60</pd:endY>
+    <pd:errorSchemas>
+        <ErrorReport ref="pfx2:ErrorReport"/>
+    </pd:errorSchemas>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1434721705642</pd:targetNamespace>
+    <pd:activity name="PublishToAmazonTopicSub">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>270</pd:x>
+        <pd:y>55</pd:y>
+        <config>
+            <processName>/BusinessProcesses/SubProcess/PublishToAmazonTopicSub.process</processName>
+        </config>
+        <pd:inputBindings>
+            <Request>
+                <AmazonTopicName>
+                    <xsl:value-of select="$Start/pfx:Amazon/pfx:TopicName"/>
+                </AmazonTopicName>
+                <Payload>
+                    <xsl:value-of select="$Start/pfx:Amazon/pfx:Payload"/>
+                </Payload>
+                <accessKey>
+                    <xsl:value-of select="$_globalVariables/ns:GlobalVariables/QuickConnect/AmazonSNS/Topic/AccessKey"/>
+                </accessKey>
+                <secretKey>
+                    <xsl:value-of select="$_globalVariables/ns:GlobalVariables/QuickConnect/AmazonSNS/Topic/SecretKey"/>
+                </secretKey>
+            </Request>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>PublishToAmazonTopicSub</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>PublishToAmazonTopicSub</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

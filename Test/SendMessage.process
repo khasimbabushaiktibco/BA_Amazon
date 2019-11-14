@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns1="http://www.tibco.com/pe/DeployedVarsType" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns="http://queue.amazonaws.com/doc/2012-11-05/">
+    <pd:name>Test/SendMessage.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startX>150</pd:startX>
+    <pd:startY>55</pd:startY>
+    <pd:returnBindings/>
+    <pd:endName>End</pd:endName>
+    <pd:endX>450</pd:endX>
+    <pd:endY>55</pd:endY>
+    <pd:errorSchemas/>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1428937030693</pd:targetNamespace>
+    <pd:activity name="SendMessage">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>310</pd:x>
+        <pd:y>55</pd:y>
+        <config>
+            <processName>/QuickConnect/AmazonSQS/Processes/Operations/SendMessage.process</processName>
+        </config>
+        <pd:inputBindings>
+            <request>
+                <queueName>
+                    <xsl:value-of select="$_globalVariables/ns1:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/AmazonQueues"/>
+                </queueName>
+                <ns:SendMessage>
+                    <ns:MessageBody>
+                        <xsl:value-of select="'{&#xA;    &quot;resource&quot;:&quot;subscription&quot;,&#xA;    &quot;method&quot;:&quot;create&quot;,&#xA;    &quot;type&quot;:&quot;loyalty&quot;,&#xA;    &quot;profileId&quot;: &quot;_PHL730030&quot;,&#xA;    &quot;brand&quot;:&quot;uo&quot;,&#xA;    &quot;site&quot;:&quot;us&quot;,&#xA;    &quot;language&quot;:&quot;en&quot;,&#xA;    &quot;currency&quot;:&quot;USD&quot;,&#xA;    &quot;dataCenter&quot;:&quot;PHL&quot;&#xA;}'"/>
+                    </ns:MessageBody>
+                </ns:SendMessage>
+            </request>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>SendMessage</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>SendMessage</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

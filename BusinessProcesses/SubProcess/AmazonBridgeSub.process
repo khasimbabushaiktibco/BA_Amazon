@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns2="http://www.tibco.com/pe/EngineTypes" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns1="http://queue.amazonaws.com/doc/2012-11-05/" xmlns:ns="http://www.tibco.com/pe/DeployedVarsType" xmlns:ns3="http://schemas.tibco.com/bw/plugins/jms/5.0/jmsExceptions" xmlns:ns0="http://www.tibco.com/namespaces/tnt/plugins/jms" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:pfx4="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon" xmlns:tib="http://www.tibco.com/bw/xslt/custom-functions" xmlns:pfx3="http://www.hcleai.com/leaf/auditclient" xmlns:pfx2="http://www.tibco.com/pe/GenerateErrorActivity/InputSchema" xmlns:pfx="http://www.hcleai.com/leaf/exceptionclient">
+    <xsd:import namespace="http://www.hcleai.com/leaf/exceptionclient" schemaLocation="/Shared Resources/Schemas/Custom/Exception/ExceptionSchema.xsd"/>
+    <xsd:import namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon" schemaLocation="/Shared Resources/Schemas/ReceiveFromAmazon.xsd"/>
+    <pd:name>BusinessProcesses/SubProcess/AmazonBridgeSub.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startType ref="pfx4:root"/>
+    <pd:startX>40</pd:startX>
+    <pd:startY>196</pd:startY>
+    <pd:returnBindings/>
+    <pd:endName>End</pd:endName>
+    <pd:endX>899</pd:endX>
+    <pd:endY>184</pd:endY>
+    <pd:errorSchemas>
+        <ErrorSchema ref="pfx:ErrorReport"/>
+    </pd:errorSchemas>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1425451466927</pd:targetNamespace>
+    <pd:group name="Group">
+        <pd:type>com.tibco.pe.core.LoopGroup</pd:type>
+        <pd:resourceType>ae.process.group</pd:resourceType>
+        <pd:x>253</pd:x>
+        <pd:y>42</pd:y>
+        <pd:width>510</pd:width>
+        <pd:height>280</pd:height>
+        <pd:collapsedWidth>57</pd:collapsedWidth>
+        <pd:collapsedHeight>70</pd:collapsedHeight>
+        <pd:groupVariables/>
+        <pd:joinToggle>inherit</pd:joinToggle>
+        <config>
+            <pd:groupType>inputLoop</pd:groupType>
+            <pd:serializable>false</pd:serializable>
+            <pd:over>$ReceiveFromAmazonQueue/ns1:ReceiveMessageResponse/ns1:ReceiveMessageResult/ns1:Message</pd:over>
+            <pd:iterationElementSlot>cur</pd:iterationElementSlot>
+            <pd:indexSlot>i</pd:indexSlot>
+            <pd:activityOutputName/>
+            <pd:accumulateOutput>false</pd:accumulateOutput>
+        </config>
+        <pd:inputBindings/>
+        <pd:expanded>true</pd:expanded>
+        <pd:transition>
+            <pd:from>start</pd:from>
+            <pd:to>Remove CRLF</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:transition>
+            <pd:from>ConfirmMsgFromAmazonQueue</pd:from>
+            <pd:to>end</pd:to>
+            <pd:lineType>Multiple Bends</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:transition>
+            <pd:from>SendMsgtoTIBCOQueue</pd:from>
+            <pd:to>ConfirmMsgFromAmazonQueue</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:transition>
+            <pd:from>Remove CRLF</pd:from>
+            <pd:to>SendMsgtoTIBCOQueue</pd:to>
+            <pd:lineType>Default</pd:lineType>
+            <pd:lineColor>-16777216</pd:lineColor>
+            <pd:conditionType>always</pd:conditionType>
+        </pd:transition>
+        <pd:activity name="SendMsgtoTIBCOQueue">
+            <pd:type>com.tibco.plugin.jms.JMSQueueSendActivity</pd:type>
+            <pd:resourceType>ae.activities.JMSQueueSendActivity</pd:resourceType>
+            <pd:x>481</pd:x>
+            <pd:y>187</pd:y>
+            <config>
+                <PermittedMessageType>Text</PermittedMessageType>
+                <SessionAttributes>
+                    <transacted>false</transacted>
+                    <acknowledgeMode>1</acknowledgeMode>
+                    <maxSessions>1</maxSessions>
+                    <destination>UO.ATG.PROFILESYNC.SUBSCRIBE.QUEUE</destination>
+                </SessionAttributes>
+                <ConfigurableHeaders>
+                    <JMSDeliveryMode>PERSISTENT</JMSDeliveryMode>
+                    <JMSExpiration>0</JMSExpiration>
+                    <JMSPriority>4</JMSPriority>
+                </ConfigurableHeaders>
+                <ConnectionReference>/Shared Resources/Connections/JMS/EMS Connection.sharedjmscon</ConnectionReference>
+            </config>
+            <pd:inputBindings>
+                <ns0:ActivityInput>
+                    <destinationQueue>
+                        <xsl:value-of select="$Start/pfx4:root/pfx4:Queues/pfx4:TIBCOQueue"/>
+                    </destinationQueue>
+                    <xsl:choose>
+                        <xsl:when test="contains(upper-case($_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/OnlyPayloadQueues),concat(',',$Start/pfx4:root/pfx4:Queues/pfx4:AmazonQueue,','))">
+                            <Body>
+                                <xsl:value-of select="$Remove-CRLF/javaCodeActivityOutput/outputBase64Str"/>
+                            </Body>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <Body>
+                                <xsl:value-of select="translate(substring-before(substring-after($Remove-CRLF/javaCodeActivityOutput/outputBase64Str,'Message&quot; : &quot;'),'&quot;,   &quot;Timestamp&quot;'),&quot;\&quot;,&quot;&quot;)"/>
+                            </Body>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </ns0:ActivityInput>
+            </pd:inputBindings>
+        </pd:activity>
+        <pd:activity name="ConfirmMsgFromAmazonQueue">
+            <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+            <pd:resourceType>ae.process.subprocess</pd:resourceType>
+            <pd:x>627</pd:x>
+            <pd:y>190</pd:y>
+            <config>
+                <processName>/QuickConnect/AmazonSQS/Processes/Operations/DeleteMessageBatch.process</processName>
+            </config>
+            <pd:inputBindings>
+                <request>
+                    <queueName>
+                        <xsl:value-of select="$Start/pfx4:root/pfx4:Queues/pfx4:AmazonQueue"/>
+                    </queueName>
+                    <ns1:DeleteMessageBatch>
+                        <ns1:DeleteMessageBatchRequestEntry>
+                            <ns1:Id>
+                                <xsl:value-of select="$cur/ns1:Message/ns1:MessageId"/>
+                            </ns1:Id>
+                            <ns1:ReceiptHandle>
+                                <xsl:value-of select="$cur/ns1:Message/ns1:ReceiptHandle"/>
+                            </ns1:ReceiptHandle>
+                        </ns1:DeleteMessageBatchRequestEntry>
+                    </ns1:DeleteMessageBatch>
+                </request>
+            </pd:inputBindings>
+        </pd:activity>
+        <pd:activity name="Remove CRLF">
+            <pd:type>com.tibco.plugin.java.JavaActivity</pd:type>
+            <pd:resourceType>ae.javapalette.javaActivity</pd:resourceType>
+            <pd:x>351</pd:x>
+            <pd:y>117</pd:y>
+            <config>
+                <fullsource>package BusinessProcesses.SubProcess.AmazonBridgeSub;
+import java.util.*;
+import java.io.*;
+import sun.misc.BASE64Decoder;
+import  java.lang.Object.*;
+import  java.util.regex.Pattern;
+import  java.util.regex.Matcher;
+
+public class AmazonBridgeSubRemoveCRLF{
+/****** START SET/GET METHOD, DO NOT MODIFY *****/
+	protected String inputBase64Str = "";
+	protected String outputBase64Str = "";
+	public String getinputBase64Str() {
+		return inputBase64Str;
+	}
+	public void setinputBase64Str(String val) {
+		inputBase64Str = val;
+	}
+	public String getoutputBase64Str() {
+		return outputBase64Str;
+	}
+	public void setoutputBase64Str(String val) {
+		outputBase64Str = val;
+	}
+/****** END SET/GET METHOD, DO NOT MODIFY *****/
+	public AmazonBridgeSubRemoveCRLF() {
+	}
+
+public static String toBASE64(String s) {
+  if (s == null)
+   return null;
+  return (new sun.misc.BASE64Encoder()).encode(s.getBytes());
+}
+
+public static String getFromBASE64(String s) {
+  if (s == null)
+   return null;
+  BASE64Decoder decoder = new BASE64Decoder();
+  try {
+   byte[] b = decoder.decodeBuffer(s);
+   return new String(b);
+  } catch (Exception e) {
+   return null;
+  }
+}
+	public void invoke() throws Exception {
+/* Available Variables: DO NOT MODIFY
+	In  : String inputBase64Str
+	Out : String outputBase64Str
+* Available Variables: DO NOT MODIFY *****/
+	
+		 try {
+  
+inputBase64Str =  inputBase64Str.replaceAll("\\u000D"," ");
+ outputBase64Str = inputBase64Str.replaceAll("\\u000A"," ");
+
+  } catch (Exception e) {
+   e.printStackTrace();
+  }
+}
+}
+</fullsource>
+                <fileName>AmazonBridgeSubRemoveCRLF</fileName>
+                <packageName>BusinessProcesses.SubProcess.AmazonBridgeSub</packageName>
+                <outputData>
+                    <row>
+                        <fieldName>outputBase64Str</fieldName>
+                        <fieldType>string</fieldType>
+                        <fieldRequired>optional</fieldRequired>
+                    </row>
+                </outputData>
+                <inputData>
+                    <row>
+                        <fieldName>inputBase64Str</fieldName>
+                        <fieldType>string</fieldType>
+                        <fieldRequired>optional</fieldRequired>
+                    </row>
+                </inputData>
+                <byteCode>
+                    <class>
+                        <name>AmazonBridgeSubRemoveCRLF</name>
+                        <byteCode>yv66vgAAADMASwkAFAAuCQAUAC8KABUAMAgAMQcAMgoABQAwCgAMADMKAAUANAcANQoACQAwCgAJADYHADcKAAwAOAcAOQgAOggAOwoADAA8CAA9CgAOAD4HAD8HAEABAA5pbnB1dEJhc2U2NFN0cgEAEkxqYXZhL2xhbmcvU3RyaW5nOwEAD291dHB1dEJhc2U2NFN0cgEAEWdldGlucHV0QmFzZTY0U3RyAQAUKClMamF2YS9sYW5nL1N0cmluZzsBAARDb2RlAQAPTGluZU51bWJlclRhYmxlAQARc2V0aW5wdXRCYXNlNjRTdHIBABUoTGphdmEvbGFuZy9TdHJpbmc7KVYBABJnZXRvdXRwdXRCYXNlNjRTdHIBABJzZXRvdXRwdXRCYXNlNjRTdHIBAAY8aW5pdD4BAAMoKVYBAAh0b0JBU0U2NAEAJihMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9TdHJpbmc7AQANU3RhY2tNYXBUYWJsZQEADWdldEZyb21CQVNFNjQHADcHADUHADkBAAZpbnZva2UBAApFeGNlcHRpb25zAQAKU291cmNlRmlsZQEAHkFtYXpvbkJyaWRnZVN1YlJlbW92ZUNSTEYuamF2YQwAFgAXDAAYABcMACEAIgEAAAEAFnN1bi9taXNjL0JBU0U2NEVuY29kZXIMAEEAQgwAQwBEAQAWc3VuL21pc2MvQkFTRTY0RGVjb2RlcgwARQBGAQAQamF2YS9sYW5nL1N0cmluZwwAIQBHAQATamF2YS9sYW5nL0V4Y2VwdGlvbgEABlx1MDAwRAEAASAMAEgASQEABlx1MDAwQQwASgAiAQBGQnVzaW5lc3NQcm9jZXNzZXMvU3ViUHJvY2Vzcy9BbWF6b25CcmlkZ2VTdWIvQW1hem9uQnJpZGdlU3ViUmVtb3ZlQ1JMRgEAEGphdmEvbGFuZy9PYmplY3QBAAhnZXRCeXRlcwEABCgpW0IBAAZlbmNvZGUBABYoW0IpTGphdmEvbGFuZy9TdHJpbmc7AQAMZGVjb2RlQnVmZmVyAQAWKExqYXZhL2xhbmcvU3RyaW5nOylbQgEABShbQilWAQAKcmVwbGFjZUFsbAEAOChMamF2YS9sYW5nL1N0cmluZztMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9TdHJpbmc7AQAPcHJpbnRTdGFja1RyYWNlACEAFAAVAAAAAgAEABYAFwAAAAQAGAAXAAAACAABABkAGgABABsAAAAdAAEAAQAAAAUqtAABsAAAAAEAHAAAAAYAAQAAAA4AAQAdAB4AAQAbAAAAIgACAAIAAAAGKiu1AAGxAAAAAQAcAAAACgACAAAAEQAFABIAAQAfABoAAQAbAAAAHQABAAEAAAAFKrQAArAAAAABABwAAAAGAAEAAAAUAAEAIAAeAAEAGwAAACIAAgACAAAABiortQACsQAAAAEAHAAAAAoAAgAAABcABQAYAAEAIQAiAAEAGwAAADUAAgABAAAAESq3AAMqEgS1AAEqEgS1AAKxAAAAAQAcAAAAEgAEAAAAGgAEAAsACgAMABAAGwAJACMAJAABABsAAAA+AAIAAQAAABUqxwAFAbC7AAVZtwAGKrYAB7YACLAAAAACABwAAAAOAAMAAAAeAAQAHwAGACAAJQAAAAMAAQYACQAmACQAAQAbAAAAcQADAAMAAAAgKscABQGwuwAJWbcACkwrKrYAC027AAxZLLcADbBNAbAAAQAOABwAHQAOAAIAHAAAAB4ABwAAACQABAAlAAYAJgAOACgAFAApAB0AKgAeACsAJQAAABMAAgb/ABYAAgcAJwcAKAABBwApAAEAKgAiAAIAGwAAAGgABAACAAAAJyoqtAABEg8SELYAEbUAASoqtAABEhISELYAEbUAAqcACEwrtgATsQABAAAAHgAhAA4AAgAcAAAAGgAGAAAANgAPADcAHgA7ACEAOQAiADoAJgA8ACUAAAAHAAJhBwApBAArAAAABAABAA4AAQAsAAAAAgAt</byteCode>
+                    </class>
+                </byteCode>
+            </config>
+            <pd:inputBindings>
+                <javaCodeActivityInput>
+                    <inputBase64Str>
+                        <xsl:value-of select="$cur/ns1:Message/ns1:Body"/>
+                    </inputBase64Str>
+                </javaCodeActivityInput>
+            </pd:inputBindings>
+        </pd:activity>
+    </pd:group>
+    <pd:activity name="AddException">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>717</pd:x>
+        <pd:y>444</pd:y>
+        <config>
+            <processName>/LEAF Libraries/Exception/AddException.process</processName>
+        </config>
+        <pd:inputBindings>
+            <pfx:ExceptionCollection>
+                <pfx:Exception>
+                    <pfx:ExceptionCode>
+                        <xsl:value-of select="$_error_Generate-Error/pfx:ErrorReport/pfx:MsgCode"/>
+                    </pfx:ExceptionCode>
+                    <pfx:ProcessName>
+                        <xsl:value-of select="'AmazonBridgeSubProcess'"/>
+                    </pfx:ProcessName>
+                    <pfx:Domain>
+                        <xsl:value-of select="$_globalVariables/ns:GlobalVariables/LEAF/DomainName"/>
+                    </pfx:Domain>
+                    <pfx:ExceptionLoggedDateTime>
+                        <xsl:value-of select="current-dateTime()"/>
+                    </pfx:ExceptionLoggedDateTime>
+                    <pfx:ExceptionDetails>
+                        <xsl:value-of select="$_error_Generate-Error/pfx:ErrorReport/pfx:Msg"/>
+                    </pfx:ExceptionDetails>
+                    <pfx:DeferNotification>
+                        <xsl:value-of select="'Y'"/>
+                    </pfx:DeferNotification>
+                    <pfx:DeferNotificationTimeoutInSecs>
+                        <xsl:value-of select="0"/>
+                    </pfx:DeferNotificationTimeoutInSecs>
+                    <xsl:for-each select="$_error/ns2:ErrorReport">
+                        <pfx:ErrorReport>
+                            <pfx:StackTrace>
+                                <xsl:value-of select="StackTrace"/>
+                            </pfx:StackTrace>
+                            <pfx:Msg>
+                                <xsl:value-of select="Msg"/>
+                            </pfx:Msg>
+                            <pfx:FullClass>
+                                <xsl:value-of select="FullClass"/>
+                            </pfx:FullClass>
+                            <pfx:Class>
+                                <xsl:value-of select="Class"/>
+                            </pfx:Class>
+                            <pfx:ProcessStack>
+                                <xsl:value-of select="ProcessStack"/>
+                            </pfx:ProcessStack>
+                            <xsl:if test="MsgCode">
+                                <pfx:MsgCode>
+                                    <xsl:value-of select="MsgCode"/>
+                                </pfx:MsgCode>
+                            </xsl:if>
+                            <xsl:if test="Data/*">
+                                <pfx:Data>
+                                    <xsl:value-of select="Data/*"/>
+                                </pfx:Data>
+                            </xsl:if>
+                        </pfx:ErrorReport>
+                    </xsl:for-each>
+                    <xsl:for-each xmlns:xsl="http://www.w3.org/1999/XSL/Transform" select="$_processContext/ns2:ProcessContext">
+                        <pfx:ProcessContext>
+                            <pfx:ProcessId>
+                                <xsl:value-of select="ProcessId"/>
+                            </pfx:ProcessId>
+                            <pfx:ProjectName>
+                                <xsl:value-of select="ProjectName"/>
+                            </pfx:ProjectName>
+                            <pfx:EngineName>
+                                <xsl:value-of select="EngineName"/>
+                            </pfx:EngineName>
+                            <pfx:RestartedFromCheckpoint>
+                                <xsl:value-of select="RestartedFromCheckpoint"/>
+                            </pfx:RestartedFromCheckpoint>
+                            <xsl:for-each select="TrackingInfo">
+                                <pfx:TrackingInfo>
+                                    <xsl:value-of select="."/>
+                                </pfx:TrackingInfo>
+                            </xsl:for-each>
+                            <xsl:if test="CustomId">
+                                <pfx:CustomId>
+                                    <xsl:value-of select="CustomId"/>
+                                </pfx:CustomId>
+                            </xsl:if>
+                        </pfx:ProcessContext>
+                    </xsl:for-each>
+                    <pfx:ExceptionParameters>
+                        <pfx:Name>
+                            <xsl:value-of select="'ProcessId'"/>
+                        </pfx:Name>
+                        <pfx:Value>
+                            <xsl:value-of select="$_processContext/ns2:ProcessContext/ProcessId"/>
+                        </pfx:Value>
+                    </pfx:ExceptionParameters>
+                </pfx:Exception>
+            </pfx:ExceptionCollection>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>543</pd:x>
+        <pd:y>445</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Generate Error">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>196</pd:x>
+        <pd:y>397</pd:y>
+        <config>
+            <faultName>ErrorSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx2:ActivityInput>
+                <data>
+                    <pfx:ErrorReport>
+                        <xsl:if test="$_error/ns2:ErrorReport/StackTrace">
+                            <pfx:StackTrace>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/StackTrace"/>
+                            </pfx:StackTrace>
+                        </xsl:if>
+                        <xsl:choose>
+                            <xsl:when test="exists($_error_ReceiveFromAmazonQueue/ns1:ErrorResponse/ns1:Error)">
+                                <pfx:Msg>
+                                    <xsl:value-of select="concat(&quot;Exception occured while receiving message from amazon queue -->&quot;,tib:concat-sequence-format(for $mes in $_error_ReceiveFromAmazonQueue/ns1:ErrorResponse/ns1:Error return concat($mes/ns1:Type,'|',$mes/ns1:Message),&quot;,&quot;))"/>
+                                </pfx:Msg>
+                            </xsl:when>
+                            <xsl:when test="exists($_error_SendMsgtoTIBCOQueue/ActivityErrors/*)">
+                                <pfx:Msg>
+                                    <xsl:value-of select="concat(&quot;Exception occured while publishing message to tibco queue in AmazonBridgeSub -->&quot;,$_error_SendMsgtoTIBCOQueue/ActivityErrors/*/msg)"/>
+                                </pfx:Msg>
+                            </xsl:when>
+                            <xsl:when test="exists($_error_ConfirmMsgFromAmazonQueue/ns1:ErrorResponse/ns1:Error)">
+                                <pfx:Msg>
+                                    <xsl:value-of select="concat(&quot;Exception occured while deleting message from amazon queue  in AmazonBridgeSub-->&quot;,tib:concat-sequence-format(for $mes in $_error_ConfirmMsgFromAmazonQueue/ns1:ErrorResponse/ns1:Error return concat($mes/ns1:Type,'|',$mes/ns1:Message),&quot;,&quot;))"/>
+                                </pfx:Msg>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <pfx:Msg>
+                                    <xsl:value-of select="concat(&quot;Validation exception occured in AmazonBridgeSub-->&quot;,$_error/ns2:ErrorReport/Msg)"/>
+                                </pfx:Msg>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        <xsl:if test="$_error/ns2:ErrorReport/FullClass">
+                            <pfx:FullClass>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/FullClass"/>
+                            </pfx:FullClass>
+                        </xsl:if>
+                        <xsl:if test="$_error/ns2:ErrorReport/Class">
+                            <pfx:Class>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/Class"/>
+                            </pfx:Class>
+                        </xsl:if>
+                        <xsl:if test="$_error/ns2:ErrorReport/ProcessStack">
+                            <pfx:ProcessStack>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/ProcessStack"/>
+                            </pfx:ProcessStack>
+                        </xsl:if>
+                        <xsl:choose>
+                            <xsl:when test="exists($_error_ReceiveFromAmazonQueue/ns1:ErrorResponse) or&#xA;exists($_error_SendMsgtoTIBCOQueue/ActivityErrors/*) or&#xA;exists($_error_ConfirmMsgFromAmazonQueue/ns1:ErrorResponse)">
+                                <pfx:MsgCode>
+                                    <xsl:value-of select="'AMAZON_SYS_Exception'"/>
+                                </pfx:MsgCode>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <pfx:MsgCode>
+                                    <xsl:value-of select="'AMAZON_DataValidation'"/>
+                                </pfx:MsgCode>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                        <xsl:if test="$_error/ns2:ErrorReport/Data/*">
+                            <pfx:Data>
+                                <xsl:value-of select="$_error/ns2:ErrorReport/Data/*"/>
+                            </pfx:Data>
+                        </xsl:if>
+                    </pfx:ErrorReport>
+                </data>
+            </pfx2:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="ReceiveFromAmazonQueue">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>154</pd:x>
+        <pd:y>195</pd:y>
+        <config>
+            <processName>/QuickConnect/AmazonSQS/Processes/Operations/ReceiveMessages.process</processName>
+        </config>
+        <pd:inputBindings>
+            <request>
+                <queueName>
+                    <xsl:value-of select="$Start/pfx4:root/pfx4:Queues/pfx4:AmazonQueue"/>
+                </queueName>
+                <ns1:ReceiveMessage>
+                    <ns1:MaxNumberOfMessages>
+                        <xsl:value-of select="$_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/MaxNumberofmsgs"/>
+                    </ns1:MaxNumberOfMessages>
+                    <ns1:VisibilityTimeout>
+                        <xsl:value-of select="$_globalVariables/ns:GlobalVariables/BusinessProcesses/AmazonBridgeTimer/VisibilityTimeOut"/>
+                    </ns1:VisibilityTimeout>
+                </ns1:ReceiveMessage>
+            </request>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>ReceiveFromAmazonQueue</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ReceiveFromAmazonQueue</pd:from>
+        <pd:to>Group</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Group</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Group</pd:from>
+        <pd:to>Generate Error</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ReceiveFromAmazonQueue</pd:from>
+        <pd:to>Generate Error</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>AddException</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AddException</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

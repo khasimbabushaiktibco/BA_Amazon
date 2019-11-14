@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 xmlns="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon"
+	 targetNamespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon"
+	 elementFormDefault="qualified"
+	 attributeFormDefault="unqualified">
+	<xs:element name="Root">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="PublishtoAmazon"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="PublishtoAmazon">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="QueueName" minOccurs="0"/>
+				<xs:element ref="MessageBody" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="QueueName" type="xs:string"/>
+	<xs:element name="MessageBody" type="xs:string"/>
+</xs:schema>

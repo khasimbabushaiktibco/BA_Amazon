@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:pfx2="http://www.hcleai.com/leaf/exceptionclient" xmlns:pfx="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon">
+    <xsd:import namespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon" schemaLocation="/SharedResources/Schemas/PublishtoAmazon.xsd"/>
+    <xsd:import namespace="http://www.hcleai.com/leaf/exceptionclient" schemaLocation="/Shared Resources/Schemas/Custom/Exception/ExceptionSchema.xsd"/>
+    <pd:name>BusinessProcesses/CallProcess/SendtoAmazonQueueImpl.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startType ref="pfx:Root"/>
+    <pd:startX>150</pd:startX>
+    <pd:startY>51</pd:startY>
+    <pd:returnBindings/>
+    <pd:endName>End</pd:endName>
+    <pd:endX>450</pd:endX>
+    <pd:endY>52</pd:endY>
+    <pd:errorSchemas>
+        <ErrorSchema ref="pfx2:ErrorReport"/>
+    </pd:errorSchemas>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1427785689449</pd:targetNamespace>
+    <pd:activity name="CallSendtoAmazonQueueSub">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>277</pd:x>
+        <pd:y>52</pd:y>
+        <config>
+            <processName>/BusinessProcesses/SubProcess/SendtoAmazonQueueSub.process</processName>
+        </config>
+        <pd:inputBindings>
+            <pfx:Root>
+                <pfx:PublishtoAmazon>
+                    <xsl:if test="$Start/pfx:Root/pfx:PublishtoAmazon/pfx:QueueName">
+                        <pfx:QueueName>
+                            <xsl:value-of select="$Start/pfx:Root/pfx:PublishtoAmazon/pfx:QueueName"/>
+                        </pfx:QueueName>
+                    </xsl:if>
+                    <pfx:MessageBody>
+                        <xsl:value-of select="$Start/pfx:Root/pfx:PublishtoAmazon/pfx:MessageBody"/>
+                    </pfx:MessageBody>
+                </pfx:PublishtoAmazon>
+            </pfx:Root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>189</pd:x>
+        <pd:y>166</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Rethrow">
+        <pd:type>com.tibco.pe.core.RethrowActivity</pd:type>
+        <pd:resourceType>ae.activities.rethrow</pd:resourceType>
+        <pd:x>341</pd:x>
+        <pd:y>168</pd:y>
+        <config/>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>CallSendtoAmazonQueueSub</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>CallSendtoAmazonQueueSub</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>Rethrow</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

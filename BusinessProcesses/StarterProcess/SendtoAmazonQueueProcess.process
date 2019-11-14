@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns2="http://www.urbanoutfitters.com/BW_Amazon/Schemas/PublishtoAmazon" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns1="http://www.tibco.com/pe/DeployedVarsType" xmlns:ns="http://www.tibco.com/namespaces/tnt/plugins/jms" xmlns:ns3="http://www.tibco.com/pe/EngineTypes" xmlns:pfx="http://www.hcleai.com/leaf/exceptionclient">
+    <pd:name>BusinessProcesses/StarterProcess/SendtoAmazonQueueProcess.process</pd:name>
+    <pd:startName>JMSQueueReceiver</pd:startName>
+    <pd:startX>0</pd:startX>
+    <pd:startY>0</pd:startY>
+    <pd:returnBindings/>
+    <pd:starter name="JMSQueueReceiver">
+        <pd:type>com.tibco.plugin.jms.JMSQueueEventSource</pd:type>
+        <pd:resourceType>ae.activities.JMSQueueEventSource</pd:resourceType>
+        <pd:x>136</pd:x>
+        <pd:y>61</pd:y>
+        <config>
+            <PermittedMessageType>Text</PermittedMessageType>
+            <SessionAttributes>
+                <transacted>false</transacted>
+                <acknowledgeMode>2</acknowledgeMode>
+                <maxSessions>%%Connections/EMS/MaxSessions%%</maxSessions>
+                <destination>%%BusinessProcesses/SendToAmazonQueue/ReceiverQueueName%%</destination>
+            </SessionAttributes>
+            <ConfigurableHeaders>
+                <JMSDeliveryMode>PERSISTENT</JMSDeliveryMode>
+                <JMSExpiration>0</JMSExpiration>
+                <JMSPriority>4</JMSPriority>
+            </ConfigurableHeaders>
+            <ApplicationProperties>/Shared Resources/Connections/JMS/JMS Application Properties.sharedjmsapp</ApplicationProperties>
+            <ConnectionReference>/Shared Resources/Connections/JMS/EMS Connection.sharedjmscon</ConnectionReference>
+        </config>
+        <pd:inputBindings/>
+    </pd:starter>
+    <pd:endName>End</pd:endName>
+    <pd:endX>588</pd:endX>
+    <pd:endY>64</pd:endY>
+    <pd:errorSchemas/>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1427785057202</pd:targetNamespace>
+    <pd:activity name="ConfirmMessage">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>462</pd:x>
+        <pd:y>64</pd:y>
+        <config>
+            <ConfirmEvent>JMSQueueReceiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="CallSendtoAmazonQueueImpl">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>293</pd:x>
+        <pd:y>63</pd:y>
+        <config>
+            <processName>/BusinessProcesses/CallProcess/SendtoAmazonQueueImpl.process</processName>
+        </config>
+        <pd:inputBindings>
+            <ns2:Root>
+                <ns2:PublishtoAmazon>
+                    <xsl:if test="$JMSQueueReceiver/ns:ActivityOutput/OtherProperties/AmazonQueueName">
+                        <ns2:QueueName>
+                            <xsl:value-of select="$JMSQueueReceiver/ns:ActivityOutput/OtherProperties/AmazonQueueName"/>
+                        </ns2:QueueName>
+                    </xsl:if>
+                    <ns2:MessageBody>
+                        <xsl:value-of select="$JMSQueueReceiver/ns:ActivityOutput/Body"/>
+                    </ns2:MessageBody>
+                </ns2:PublishtoAmazon>
+            </ns2:Root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>226</pd:x>
+        <pd:y>212</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="AddException">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>391</pd:x>
+        <pd:y>214</pd:y>
+        <config>
+            <processName>/LEAF Libraries/Exception/AddException.process</processName>
+        </config>
+        <pd:inputBindings>
+            <pfx:ExceptionCollection>
+                <pfx:Exception>
+                    <pfx:ExceptionCode>
+                        <xsl:value-of select="$_error_CallSendtoAmazonQueueImpl/pfx:ErrorReport/pfx:MsgCode"/>
+                    </pfx:ExceptionCode>
+                    <pfx:ProcessName>
+                        <xsl:value-of select="'SendtoAmazonQueueProcess'"/>
+                    </pfx:ProcessName>
+                    <pfx:Domain>
+                        <xsl:value-of select="$_globalVariables/ns1:GlobalVariables/LEAF/DomainName"/>
+                    </pfx:Domain>
+                    <pfx:ExceptionLoggedDateTime>
+                        <xsl:value-of select="current-dateTime()"/>
+                    </pfx:ExceptionLoggedDateTime>
+                    <xsl:if test="$_error_CallSendtoAmazonQueueImpl/pfx:ErrorReport/pfx:Msg">
+                        <pfx:ExceptionDetails>
+                            <xsl:value-of select="$_error_CallSendtoAmazonQueueImpl/pfx:ErrorReport/pfx:Msg"/>
+                        </pfx:ExceptionDetails>
+                    </xsl:if>
+                    <pfx:DeferNotification>
+                        <xsl:value-of select="'Y'"/>
+                    </pfx:DeferNotification>
+                    <pfx:DeferNotificationTimeoutInSecs>
+                        <xsl:value-of select="0"/>
+                    </pfx:DeferNotificationTimeoutInSecs>
+                    <xsl:for-each select="$_error/ns3:ErrorReport">
+                        <pfx:ErrorReport>
+                            <pfx:StackTrace>
+                                <xsl:value-of select="StackTrace"/>
+                            </pfx:StackTrace>
+                            <pfx:Msg>
+                                <xsl:value-of select="Msg"/>
+                            </pfx:Msg>
+                            <pfx:FullClass>
+                                <xsl:value-of select="FullClass"/>
+                            </pfx:FullClass>
+                            <pfx:Class>
+                                <xsl:value-of select="Class"/>
+                            </pfx:Class>
+                            <pfx:ProcessStack>
+                                <xsl:value-of select="ProcessStack"/>
+                            </pfx:ProcessStack>
+                            <xsl:if test="MsgCode">
+                                <pfx:MsgCode>
+                                    <xsl:value-of select="MsgCode"/>
+                                </pfx:MsgCode>
+                            </xsl:if>
+                        </pfx:ErrorReport>
+                    </xsl:for-each>
+                    <xsl:for-each select="$_processContext/ns3:ProcessContext">
+                        <pfx:ProcessContext>
+                            <pfx:ProcessId>
+                                <xsl:value-of select="ProcessId"/>
+                            </pfx:ProcessId>
+                            <pfx:ProjectName>
+                                <xsl:value-of select="ProjectName"/>
+                            </pfx:ProjectName>
+                            <pfx:EngineName>
+                                <xsl:value-of select="EngineName"/>
+                            </pfx:EngineName>
+                            <pfx:RestartedFromCheckpoint>
+                                <xsl:value-of select="RestartedFromCheckpoint"/>
+                            </pfx:RestartedFromCheckpoint>
+                            <xsl:for-each select="TrackingInfo">
+                                <pfx:TrackingInfo>
+                                    <xsl:value-of select="."/>
+                                </pfx:TrackingInfo>
+                            </xsl:for-each>
+                            <xsl:if test="CustomId">
+                                <pfx:CustomId>
+                                    <xsl:value-of select="CustomId"/>
+                                </pfx:CustomId>
+                            </xsl:if>
+                        </pfx:ProcessContext>
+                    </xsl:for-each>
+                    <pfx:ExceptionParameters>
+                        <pfx:Name>
+                            <xsl:value-of select="'ProcessId'"/>
+                        </pfx:Name>
+                        <pfx:Value>
+                            <xsl:value-of select="$_processContext/ns3:ProcessContext/ProcessId"/>
+                        </pfx:Value>
+                    </pfx:ExceptionParameters>
+                    <pfx:ExceptionAttachments>
+                        <pfx:Name>
+                            <xsl:value-of select="'SendToAmazonQueueRequestMsg'"/>
+                        </pfx:Name>
+                        <pfx:Type>
+                            <xsl:value-of select="'XML'"/>
+                        </pfx:Type>
+                        <pfx:Data>
+                            <xsl:value-of select="$JMSQueueReceiver/ns:ActivityOutput/Body"/>
+                        </pfx:Data>
+                    </pfx:ExceptionAttachments>
+                </pfx:Exception>
+            </pfx:ExceptionCollection>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Confirm">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>523</pd:x>
+        <pd:y>215</pd:y>
+        <config>
+            <ConfirmEvent>JMSQueueReceiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>JMSQueueReceiver</pd:from>
+        <pd:to>CallSendtoAmazonQueueImpl</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>CallSendtoAmazonQueueImpl</pd:from>
+        <pd:to>ConfirmMessage</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ConfirmMessage</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>AddException</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AddException</pd:from>
+        <pd:to>Confirm</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Confirm</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

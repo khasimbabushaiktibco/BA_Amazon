@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:ns2="http://www.tibco.com/pe/EngineTypes" xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns1="http://www.tibco.com/pe/DeployedVarsType" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns="http://queue.amazonaws.com/doc/2012-11-05/" xmlns:pfx="http://www.hcleai.com/leaf/exceptionclient">
+    <pd:name>BusinessProcesses/StarterProcess/AmazonBridgeTimerProcess.process</pd:name>
+    <pd:startName>Timer</pd:startName>
+    <pd:startX>0</pd:startX>
+    <pd:startY>0</pd:startY>
+    <pd:returnBindings/>
+    <pd:starter name="Timer">
+        <pd:type>com.tibco.plugin.timer.TimerEventSource</pd:type>
+        <pd:resourceType>ae.activities.timer</pd:resourceType>
+        <pd:x>67</pd:x>
+        <pd:y>73</pd:y>
+        <config>
+            <StartTime>%%BusinessProcesses/AmazonBridgeTimer/StartTime%%</StartTime>
+            <Frequency>false</Frequency>
+            <TimeInterval>%%BusinessProcesses/AmazonBridgeTimer/TimeInterval%%</TimeInterval>
+            <FrequencyIndex>Millisecond</FrequencyIndex>
+        </config>
+        <pd:inputBindings/>
+    </pd:starter>
+    <pd:endName>End</pd:endName>
+    <pd:endX>345</pd:endX>
+    <pd:endY>74</pd:endY>
+    <pd:errorSchemas/>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1425383830641</pd:targetNamespace>
+    <pd:activity name="CallAmazonBridgeImpl">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>204</pd:x>
+        <pd:y>72</pd:y>
+        <config>
+            <processName>/BusinessProcesses/CallProcess/AmazonBridgeImpl.process</processName>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Catch">
+        <pd:type>com.tibco.pe.core.CatchActivity</pd:type>
+        <pd:resourceType>ae.activities.catch</pd:resourceType>
+        <pd:x>154</pd:x>
+        <pd:y>194</pd:y>
+        <pd:handler>true</pd:handler>
+        <config>
+            <catchAll>true</catchAll>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="AddException">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>286</pd:x>
+        <pd:y>195</pd:y>
+        <config>
+            <processName>/LEAF Libraries/Exception/AddException.process</processName>
+        </config>
+        <pd:inputBindings>
+            <pfx:ExceptionCollection>
+                <pfx:Exception>
+                    <pfx:ExceptionCode>
+                        <xsl:value-of select="$_error_CallAmazonBridgeImpl/pfx:ErrorReport/pfx:MsgCode"/>
+                    </pfx:ExceptionCode>
+                    <pfx:ProcessName>
+                        <xsl:value-of select="'AmazonBridgeTimerProcess'"/>
+                    </pfx:ProcessName>
+                    <pfx:Domain>
+                        <xsl:value-of select="$_globalVariables/ns1:GlobalVariables/LEAF/DomainName"/>
+                    </pfx:Domain>
+                    <pfx:ExceptionLoggedDateTime>
+                        <xsl:value-of select="current-dateTime()"/>
+                    </pfx:ExceptionLoggedDateTime>
+                    <xsl:if test="$_error_CallAmazonBridgeImpl/pfx:ErrorReport/pfx:Msg">
+                        <pfx:ExceptionDetails>
+                            <xsl:value-of select="$_error_CallAmazonBridgeImpl/pfx:ErrorReport/pfx:Msg"/>
+                        </pfx:ExceptionDetails>
+                    </xsl:if>
+                    <pfx:DeferNotification>
+                        <xsl:value-of select="'Y'"/>
+                    </pfx:DeferNotification>
+                    <pfx:DeferNotificationTimeoutInSecs>
+                        <xsl:value-of select="0"/>
+                    </pfx:DeferNotificationTimeoutInSecs>
+                    <xsl:for-each select="$_error/ns2:ErrorReport">
+                        <pfx:ErrorReport>
+                            <pfx:StackTrace>
+                                <xsl:value-of select="StackTrace"/>
+                            </pfx:StackTrace>
+                            <pfx:Msg>
+                                <xsl:value-of select="Msg"/>
+                            </pfx:Msg>
+                            <pfx:FullClass>
+                                <xsl:value-of select="FullClass"/>
+                            </pfx:FullClass>
+                            <pfx:Class>
+                                <xsl:value-of select="Class"/>
+                            </pfx:Class>
+                            <pfx:ProcessStack>
+                                <xsl:value-of select="ProcessStack"/>
+                            </pfx:ProcessStack>
+                            <xsl:if test="MsgCode">
+                                <pfx:MsgCode>
+                                    <xsl:value-of select="MsgCode"/>
+                                </pfx:MsgCode>
+                            </xsl:if>
+                        </pfx:ErrorReport>
+                    </xsl:for-each>
+                    <xsl:for-each select="$_processContext/ns2:ProcessContext">
+                        <pfx:ProcessContext>
+                            <pfx:ProcessId>
+                                <xsl:value-of select="ProcessId"/>
+                            </pfx:ProcessId>
+                            <pfx:ProjectName>
+                                <xsl:value-of select="ProjectName"/>
+                            </pfx:ProjectName>
+                            <pfx:EngineName>
+                                <xsl:value-of select="EngineName"/>
+                            </pfx:EngineName>
+                            <pfx:RestartedFromCheckpoint>
+                                <xsl:value-of select="RestartedFromCheckpoint"/>
+                            </pfx:RestartedFromCheckpoint>
+                            <xsl:for-each select="TrackingInfo">
+                                <pfx:TrackingInfo>
+                                    <xsl:value-of select="."/>
+                                </pfx:TrackingInfo>
+                            </xsl:for-each>
+                            <xsl:if test="CustomId">
+                                <pfx:CustomId>
+                                    <xsl:value-of select="CustomId"/>
+                                </pfx:CustomId>
+                            </xsl:if>
+                        </pfx:ProcessContext>
+                    </xsl:for-each>
+                    <pfx:ExceptionParameters>
+                        <pfx:Name>
+                            <xsl:value-of select="'ProcessId'"/>
+                        </pfx:Name>
+                        <pfx:Value>
+                            <xsl:value-of select="$_processContext/ns2:ProcessContext/ProcessId"/>
+                        </pfx:Value>
+                    </pfx:ExceptionParameters>
+                </pfx:Exception>
+            </pfx:ExceptionCollection>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Timer</pd:from>
+        <pd:to>CallAmazonBridgeImpl</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>CallAmazonBridgeImpl</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Catch</pd:from>
+        <pd:to>AddException</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AddException</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

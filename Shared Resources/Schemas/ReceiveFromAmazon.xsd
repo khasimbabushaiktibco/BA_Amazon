@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 xmlns="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon"
+	 targetNamespace="http://www.urbanoutfitters.com/BW_Amazon/Schemas/ReceivefromAmazon"
+	 elementFormDefault="qualified"
+	 attributeFormDefault="unqualified">
+	<xs:element name="root">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="Queues" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Queues">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="AmazonQueue"/>
+				<xs:element ref="TIBCOQueue"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="AmazonQueue" type="xs:string"/>
+	<xs:element name="TIBCOQueue" type="xs:string"/>
+</xs:schema>
